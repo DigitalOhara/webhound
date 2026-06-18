@@ -154,6 +154,11 @@ setup
 signup
 sitemap.xml
 sitemap.xml.gz
+soap
+soap/wsdl
+soap?wsdl
+soap/service
+soap/api
 sql
 src
 staging

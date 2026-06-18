@@ -101,6 +101,8 @@ security
 server
 service
 services
+soap
+soap/wsdl
 settings
 setup
 site
