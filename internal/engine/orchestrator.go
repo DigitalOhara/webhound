@@ -251,10 +251,23 @@ func (o *Orchestrator) scanTarget(ctx context.Context, target string, expandedPa
 			})
 		}
 
-		// Process all jobs at this level.
-		rawResults := o.pool.ProcessJobs(ctx, jobs)
+		// Stream results from workers as they complete (real-time progress).
+		jobCh := make(chan response.Job, o.cfg.Threads*2)
+		resultCh := make(chan *response.RawResult, o.cfg.Threads*2)
+		o.pool.Run(ctx, jobCh, resultCh)
 
-		for _, raw := range rawResults {
+		go func() {
+			defer close(jobCh)
+			for _, job := range jobs {
+				select {
+				case jobCh <- job:
+				case <-ctx.Done():
+					return
+				}
+			}
+		}()
+
+		for raw := range resultCh {
 			// Checkpoint
 			if o.sessionMgr != nil {
 				if err := o.sessionMgr.RecordRequest(target, utils.JoinURL(raw.Job.BaseURL, raw.Job.Path)); err != nil {
