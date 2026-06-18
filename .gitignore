@@ -1,0 +1,22 @@
+# Binary
+webhound
+webhound.exe
+dist/
+
+# Go build cache
+*.test
+*.out
+coverage.out
+coverage.html
+
+# Session & profile data (user-specific)
+*.json.tmp
+
+# macOS
+.DS_Store
+
+# Editor artefacts
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -1,0 +1,89 @@
+# WebHound default configuration
+# Copy this file and pass it with: webhound scan --config my-config.yaml
+
+# ─── Target ────────────────────────────────────────────────────────────────────
+# url: https://target.example.com
+# file: targets.txt
+
+# ─── Authentication ────────────────────────────────────────────────────────────
+# bearer_token: ""
+# basic_auth: "user:pass"
+# cookies:
+#   - "PHPSESSID=abc123"
+# cookie_file: ""
+# headers:
+#   - "X-Custom-Header: value"
+# profile: ""
+
+# ─── Wordlists ─────────────────────────────────────────────────────────────────
+# wordlists:          # Leave empty to use built-in "common" list
+#   - common          # built-in: common, directories, files
+#   - /path/to/custom.txt
+extensions:
+  - php
+  - asp
+  - aspx
+  - jsp
+  - js
+  - json
+  - txt
+  - xml
+  - bak
+  - old
+  - zip
+  - tar
+  - gz
+  - html
+  - htm
+no_extension: false
+
+# ─── HTTP Tuning ───────────────────────────────────────────────────────────────
+threads: 10
+rate: 50           # requests per second per host (0 = unlimited)
+delay: 0           # fixed delay per worker, e.g. "200ms"
+timeout: 10s
+max_retries: 3
+user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
+follow_redirects: true
+max_redirects: 5
+method: GET
+
+# ─── Proxy / TLS ───────────────────────────────────────────────────────────────
+# proxy: "http://127.0.0.1:8080"
+# proxy: "socks5://127.0.0.1:9050"
+insecure_skip_verify: false
+# ca_cert: "/path/to/ca.pem"
+tls_min_version: "1.2"
+
+# ─── Response Filtering ────────────────────────────────────────────────────────
+status_codes: [200, 201, 202, 204, 301, 302, 307, 308, 401, 403, 405]
+# status_codes_blacklist: [404]
+min_length: 0
+max_length: 0        # 0 = no limit
+# hide_length: [0]
+# hide_words: [0]
+# hide_lines: [0]
+
+# ─── Recursion ─────────────────────────────────────────────────────────────────
+recursive: false
+interactive_recursion: false
+queue_recursion: false
+max_depth: 3
+smart_recursion: true
+# exclude_recursion:
+#   - logout
+#   - static
+
+# ─── Output ────────────────────────────────────────────────────────────────────
+# output: "report.json"   # .json, .csv, .html auto-detected
+# format: "json"
+quiet: false
+verbose: false
+no_color: false
+
+# ─── Session ───────────────────────────────────────────────────────────────────
+checkpoint_interval: 500
+
+# ─── Safety ────────────────────────────────────────────────────────────────────
+no_confirm: false
+max_requests: 0      # 0 = no hard cap
