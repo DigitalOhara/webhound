@@ -1,6 +1,6 @@
 # Binary
-webhound
-webhound.exe
+/webhound
+/webhound.exe
 dist/
 
 # Go build cache
