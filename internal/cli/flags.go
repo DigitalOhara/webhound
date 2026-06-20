@@ -99,6 +99,8 @@ func inferFormat(cfg *config.ScanConfig) {
 		cfg.Format = "csv"
 	case strings.HasSuffix(lower, ".html"), strings.HasSuffix(lower, ".htm"):
 		cfg.Format = "html"
+	case strings.HasSuffix(lower, ".txt"):
+		cfg.Format = "txt"
 	default:
 		cfg.Format = "json"
 	}

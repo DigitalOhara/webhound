@@ -340,6 +340,11 @@ func (o *Orchestrator) writeReports(targets []string) error {
 			return err
 		}
 		fmt.Fprintf(os.Stderr, "\033[1;34m[*]\033[0m HTML report saved: %s\n", o.cfg.Output)
+	case "txt":
+		if err := reporting.WriteTXT(o.cfg.Output, o.cfg, o.allResults, targets, o.startedAt); err != nil {
+			return err
+		}
+		fmt.Fprintf(os.Stderr, "\033[1;34m[*]\033[0m Results saved: %s\n", o.cfg.Output)
 	default:
 		return fmt.Errorf("unknown output format %q", o.cfg.Format)
 	}

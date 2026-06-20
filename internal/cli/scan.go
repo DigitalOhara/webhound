@@ -3,7 +3,11 @@ package cli
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/digitalohara/webhound/internal/engine"
@@ -40,6 +44,12 @@ Examples:
 			return fmt.Errorf("loading config file: %w", err)
 		}
 
+		// Auto-generate output path when --output is not set.
+		if cfg.Output == "" {
+			cfg.Output = defaultOutputPath(cfg.URL, cfg.File)
+			cfg.Format = "txt"
+		}
+
 		// Infer output format.
 		inferFormat(cfg)
 
@@ -74,4 +84,31 @@ Examples:
 	}
 
 	return cmd
+}
+
+// defaultOutputPath builds webhoundresults/{host}-{timestamp}.txt from the
+// first target URL (or the targets file name when --file is used).
+func defaultOutputPath(rawURL, file string) string {
+	target := rawURL
+	if target == "" {
+		target = file
+	}
+	// Try to extract just the hostname from a full URL.
+	if u, err := url.Parse(target); err == nil && u.Hostname() != "" {
+		target = u.Hostname()
+	} else {
+		// Fallback: strip scheme manually and cut at first slash.
+		target = strings.TrimPrefix(target, "https://")
+		target = strings.TrimPrefix(target, "http://")
+		if i := strings.IndexByte(target, '/'); i != -1 {
+			target = target[:i]
+		}
+	}
+	// Sanitize any remaining characters that are unsafe in filenames.
+	target = strings.NewReplacer(":", "-", "\\", "-").Replace(target)
+	if target == "" {
+		target = "scan"
+	}
+	ts := time.Now().Format("2006-01-02-150405")
+	return filepath.Join("webhoundresults", target+"-"+ts+".txt")
 }
