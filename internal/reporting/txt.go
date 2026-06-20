@@ -24,7 +24,7 @@ func WriteTXT(path string, cfg *config.ScanConfig, results []*response.Result, t
 	defer f.Close()
 
 	// Header
-	fmt.Fprintf(f, "WebHound v1.0.0 — Scan Report\n")
+	fmt.Fprintf(f, "WebHound v1.0.1 — Scan Report\n")
 	fmt.Fprintf(f, "Started : %s\n", startedAt.UTC().Format("2006-01-02 15:04:05 UTC"))
 	fmt.Fprintf(f, "Finished: %s\n", time.Now().UTC().Format("2006-01-02 15:04:05 UTC"))
 	for _, t := range targets {

@@ -22,7 +22,7 @@ import (
 	"github.com/digitalohara/webhound/pkg/utils"
 )
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 // Orchestrator wires all subsystems and runs the scan loop.
 type Orchestrator struct {

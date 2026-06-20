@@ -1,7 +1,7 @@
 BINARY    := webhound
 MODULE    := github.com/digitalohara/webhound
 MAIN      := ./cmd/webhound
-VERSION   := 1.0.0
+VERSION   := 1.0.1
 GOFLAGS   := -trimpath
 LDFLAGS   := -ldflags "-s -w -X main.version=$(VERSION)"
 
