@@ -9,6 +9,9 @@ dist/
 coverage.out
 coverage.html
 
+# Scan output
+webhoundresults/
+
 # Session & profile data (user-specific)
 *.json.tmp
 
