@@ -6,12 +6,15 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/digitalohara/webhound/internal/auth"
 	"github.com/digitalohara/webhound/internal/config"
 	"github.com/digitalohara/webhound/internal/input"
+	"github.com/digitalohara/webhound/internal/jsextract"
 	"github.com/digitalohara/webhound/internal/ratelimit"
 	"github.com/digitalohara/webhound/internal/recursion"
 	"github.com/digitalohara/webhound/internal/reporting"
@@ -22,7 +25,7 @@ import (
 	"github.com/digitalohara/webhound/pkg/utils"
 )
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 // Orchestrator wires all subsystems and runs the scan loop.
 type Orchestrator struct {
@@ -41,6 +44,7 @@ type Orchestrator struct {
 	httpClient   *http.Client
 	startedAt    time.Time
 	allResults   []*response.Result
+	jsFiles      []jsextract.JSFile
 }
 
 // New constructs an Orchestrator from cfg.
@@ -207,7 +211,28 @@ func (o *Orchestrator) Run(ctx context.Context) error {
 		logger.Error().Err(err).Msg("writing reports")
 	}
 
+	// Write JS extraction sidecar
+	if !o.cfg.NoJSExtract && len(o.jsFiles) > 0 && o.cfg.Output != "" {
+		jsOut := jsOutputPath(o.cfg.Output)
+		primaryTarget := ""
+		if len(targets) > 0 {
+			primaryTarget = targets[0]
+		}
+		if err := jsextract.WriteReport(jsOut, primaryTarget, o.jsFiles, o.startedAt); err != nil {
+			logger.Error().Err(err).Msg("writing JS extraction report")
+		} else {
+			fmt.Fprintf(os.Stderr, "\033[1;34m[*]\033[0m JS endpoints saved: %s\n", jsOut)
+		}
+	}
+
 	return nil
+}
+
+// jsOutputPath derives the JS sidecar path from the main output path.
+func jsOutputPath(mainOut string) string {
+	ext := filepath.Ext(mainOut)
+	base := strings.TrimSuffix(mainOut, ext)
+	return base + "-js-endpoints.txt"
 }
 
 // scanTarget executes a BFS-style scan of a single target URL.
@@ -281,6 +306,14 @@ func (o *Orchestrator) scanTarget(ctx context.Context, target string, expandedPa
 				continue
 			}
 
+			// Passive JS extraction: analyse any .js file discovered by the scan.
+			if !o.cfg.NoJSExtract && raw.StatusCode == 200 && strings.HasSuffix(strings.ToLower(raw.Job.Path), ".js") && len(raw.Body) > 0 {
+				jf := jsextract.ExtractFromBody(utils.JoinURL(raw.Job.BaseURL, raw.Job.Path), raw.Body)
+				if len(jf.Findings) > 0 {
+					o.jsFiles = append(o.jsFiles, jf)
+				}
+			}
+
 			// Store and report.
 			o.allResults = append(o.allResults, result)
 			state.AddResult(target, result)
@@ -311,6 +344,22 @@ func (o *Orchestrator) scanTarget(ctx context.Context, target string, expandedPa
 					baseURL: r.URL,
 					depth:   r.Depth + 1,
 				})
+			}
+		}
+	}
+
+	// Active JS extraction: crawl <script src> tags from the target root HTML.
+	if !o.cfg.NoJSExtract {
+		ext := jsextract.New(o.httpClient, o.cfg.UserAgent, target)
+		found := ext.Run(ctx)
+		// Deduplicate against JS files already picked up passively.
+		existing := make(map[string]bool)
+		for _, jf := range o.jsFiles {
+			existing[jf.URL] = true
+		}
+		for _, jf := range found {
+			if !existing[jf.URL] {
+				o.jsFiles = append(o.jsFiles, jf)
 			}
 		}
 	}

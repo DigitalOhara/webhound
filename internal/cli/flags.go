@@ -82,6 +82,9 @@ func bindScanFlags(cmd *cobra.Command) *config.ScanConfig {
 	cmd.Flags().BoolVar(&cfg.NoConfirm, "no-confirm", false, "Skip recursion confirmation prompts")
 	cmd.Flags().IntVar(&cfg.MaxRequests, "max-requests", 0, "Hard cap on total requests (0 = no limit)")
 
+	// JS extraction
+	cmd.Flags().BoolVar(&cfg.NoJSExtract, "no-js-extract", false, "Disable JS endpoint extraction")
+
 	return cfg
 }
 

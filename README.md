@@ -9,6 +9,7 @@
 ## Features
 
 - **Built-in wordlists** — `common`, `directories`, and `files` lists embedded in the binary; no external files required
+- **JS endpoint extraction** — automatically crawls `<script src>` tags, fetches JS bundles, and extracts hardcoded URLs, API paths, env vars, WebSocket endpoints, and `fetch`/`axios` calls to a sidecar file
 - **Auto-save results** — findings automatically saved to `webhoundresults/<host>-<timestamp>.txt` after every scan
 - **Multi-target scanning** — scan a single URL or a file of targets in one run
 - **Authentication support** — Bearer token, Basic auth, custom cookies, cookie files, and arbitrary HTTP headers
@@ -186,6 +187,12 @@ webhound scan [flags]
 | `-v, --verbose` | Enable debug logging |
 | `--no-color` | Disable colour output |
 
+### JS Extraction
+
+| Flag | Description |
+|------|-------------|
+| `--no-js-extract` | Disable JS endpoint extraction (enabled by default) |
+
 ### Session
 
 | Flag | Description |
@@ -193,6 +200,44 @@ webhound scan [flags]
 | `--session` | Session name (default: auto-generated timestamp) |
 | `--resume` | Resume a previously interrupted scan by session ID |
 | `--checkpoint-interval` | Save checkpoint every N requests (default: 500) |
+
+---
+
+## JS Endpoint Extraction
+
+WebHound automatically extracts hardcoded endpoints and URLs from JavaScript bundles found on the target. After each scan, it:
+
+1. Fetches the target's root HTML and parses all `<script src>` tags
+2. Fetches each JS bundle (handles relative, absolute, and protocol-relative URLs)
+3. Passively analyses any `.js` files discovered during the wordlist scan
+4. Extracts: absolute URLs, WebSocket URLs, relative API paths (`/api/*`, `/v1/*`, `/graphql`, `/admin/*`, etc.), environment variables with URL values (`REACT_APP_*`), `fetch()` / `axios.*()` calls, and `baseURL` assignments
+
+Results are written to a sidecar file alongside the main scan output:
+
+```
+webhoundresults/
+  example.com-2026-06-24-150405.txt
+  example.com-2026-06-24-150405-js-endpoints.txt
+```
+
+**Example sidecar output:**
+```
+WebHound — JS Endpoint Extraction
+Target  : https://example.com
+JS Files: 2 analysed
+Findings: 14
+────────────────────────────────────────────────────────────────────────
+
+[js] https://example.com/static/js/main.abc123.js (12 findings)
+  [URL]   https://api.example.com/v1
+  [ENV]   REACT_APP_API_URL → https://api.example.com
+  [PATH]  /api/v1/users
+  [PATH]  /admin/dashboard
+  [WS]    wss://ws.example.com/live
+  ...
+```
+
+Disable with `--no-js-extract`.
 
 ---
 

@@ -78,6 +78,9 @@ type ScanConfig struct {
 	// --- Safety ---
 	NoConfirm   bool `yaml:"no_confirm"`
 	MaxRequests int  `yaml:"max_requests"`
+
+	// --- JS Extraction ---
+	NoJSExtract bool `yaml:"no_js_extract"`
 }
 
 // LoadFile reads a YAML config file and returns a ScanConfig.
